@@ -15,16 +15,18 @@ public class LoadSampleData {
     private static final Logger log = LoggerFactory.getLogger(LoadSampleData.class);
 
     @Bean
-    CommandLineRunner initDatabase(DutyRosterRepository repository){
+    CommandLineRunner initDatabase(DutyRosterRepository rosterRepository){
         return args -> {
-            log.info("Preloading: {}", repository.save(new DutyRoster(DetailType.CQ_NCO,
+            log.info("Preloading: {}", rosterRepository.save(new DutyRoster(DetailType.CQ_NCO,
                     "CQ NCO in Building 12345")));
-            log.info("Preloading: {}", repository.save(new DutyRoster(DetailType.CQ_RUNNER,
+            log.info("Preloading: {}", rosterRepository.save(new DutyRoster(DetailType.CQ_RUNNER,
                     "CQ Runner in Building 12345")));
-            log.info("Preloading: {}", repository.save(new DutyRoster(DetailType.SD_NCO,
+            log.info("Preloading: {}", rosterRepository.save(new DutyRoster(DetailType.SD_NCO,
                     "SD NCO in Building 67890")));
-            log.info("Preloading: {}", repository.save(new DutyRoster(DetailType.SD_RUNNER,
+            log.info("Preloading: {}", rosterRepository.save(new DutyRoster(DetailType.SD_RUNNER,
                     "SD Runner in Building 67890")));
+
+
         };
     }
     }

@@ -51,6 +51,18 @@ public class DutyAssignment {
         return description;
     }
 
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public void setDetailType(DetailType detailType) {
+        this.detailType = detailType;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         return String.format("[ %s on %s | %s", this.detailType, this.date, "TBD");
