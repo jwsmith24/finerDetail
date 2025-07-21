@@ -4,28 +4,48 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import dev.jake.finerdetail.entities.DutyAssignment;
 import dev.jake.finerdetail.entities.DutyRoster;
 import dev.jake.finerdetail.repos.DutyRosterRepository;
 import dev.jake.finerdetail.util.constants.DetailType;
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
+
 import net.minidev.json.JSONArray;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DutyRosterHttpTests {
 
+    private final static Logger log = LoggerFactory.getLogger(DutyRosterHttpTests.class);
 
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
     private DutyRosterRepository dutyRosterRepository;
+
+
+    @BeforeEach
+    void resetDatabase() {
+        dutyRosterRepository.deleteAll();
+        dutyRosterRepository.save(new DutyRoster(DetailType.CQ_NCO, "CQ NCO in Building 12345"));
+        dutyRosterRepository.save(new DutyRoster(DetailType.CQ_RUNNER, "CQ Runner in Building 12345"));
+        dutyRosterRepository.save(new DutyRoster(DetailType.SD_NCO, "SD NCO in Building 67890"));
+        dutyRosterRepository.save(new DutyRoster(DetailType.SD_RUNNER, "SD Runner in Building 67890"));
+    }
 
     @Test
     void getAllRostersShouldReturnCorrectNumberOfItems() {
@@ -123,5 +143,54 @@ public class DutyRosterHttpTests {
 
     //todo: tests for getting an assignment, getting all assignments, adding an assignment,
     // removing an assignment, removing all assignments
+
+    @Test
+    void shouldCreateANewAssignment() {
+
+        // get a saved roster
+        List<DutyRoster> rosters = dutyRosterRepository.findAll();
+        Long firstId = rosters.getFirst().getId();
+
+        // create a new assignment
+        DutyAssignment newAssignment = new DutyAssignment(LocalDate.of(2025, 7, 25), DetailType.CQ_NCO);
+
+        // add assignment to existing roster
+        ResponseEntity<DutyRoster> response = restTemplate.postForEntity("/rosters/" + firstId + "/assignments",
+                newAssignment, DutyRoster.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+
+        // check if roster has the new assignment
+        DutyRoster updatedRoster =  restTemplate.getForObject("/rosters/1", DutyRoster.class);
+
+        List<DutyAssignment> assignments = updatedRoster.getDutyAssignments();
+        assertThat(assignments).isNotNull().hasSize(1);
+        assertThat(assignments.getFirst().getDetailType()).isEqualTo(DetailType.CQ_NCO);
+    }
+
+    @Test
+    void shouldGetAllAssignments() {
+// get a saved roster
+        List<DutyRoster> rosters = dutyRosterRepository.findAll();
+        Long firstId = rosters.getFirst().getId();
+        // add new assignment to saved roster
+        restTemplate.postForEntity("/rosters/1/assignments",
+                new DutyAssignment(LocalDate.of(2025,7,25), DetailType.ROAD_GUARD),
+                DutyAssignment.class);
+
+        DutyRoster updatedRoster = restTemplate.getForObject("/rosters/1", DutyRoster.class);
+
+        log.info("listing roster.....");
+        updatedRoster
+                .getDutyAssignments().forEach(assignment -> {
+                    log.info(assignment.toString());
+                });
+
+
+        assertThat(updatedRoster).isNotNull();
+        assertThat(updatedRoster.getDutyAssignments()).isNotEmpty();
+
+    }
 
 }
