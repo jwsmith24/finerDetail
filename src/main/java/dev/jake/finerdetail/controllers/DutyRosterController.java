@@ -47,6 +47,7 @@ public class DutyRosterController {
 
     @GetMapping("{rosterId}/assignments")
     public List<DutyAssignment> getAllAssignments(@PathVariable Long rosterId) {
+
         return service.getAllAssignments(rosterId);
     }
 
@@ -89,9 +90,15 @@ public class DutyRosterController {
         service.deleteRoster(id);
     }
 
+
     @DeleteMapping("/{rosterId}/assignments/{assignmentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAssignment(@PathVariable Long rosterId, @PathVariable Long assignmentId) {
         service.removeAssignment(rosterId, assignmentId);
+    }
+
+    @DeleteMapping
+    public void deleteAllRosters() {
+        service.deleteAllRosters();
     }
 }

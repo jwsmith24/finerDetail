@@ -72,6 +72,11 @@ public class DutyRosterService {
         repo.deleteById(id);
     }
 
+    @Transactional
+    public void deleteAllRosters() {
+        repo.deleteAll();
+    }
+
     /**
      * Load an existing roster, add a duty assignment, and then let JPA handle the database magic.
      */
