@@ -11,8 +11,6 @@ import dev.jake.finerdetail.util.constants.DetailType;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
-
-import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -20,12 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DutyRosterHttpTests {
@@ -47,6 +43,14 @@ public class DutyRosterHttpTests {
         dutyRosterRepository.save(new DutyRoster(DetailType.SD_RUNNER, "SD Runner in Building 67890"));
     }
 
+    private Long getIdOfFirstRoster() {
+        List<DutyRoster> rosters = dutyRosterRepository.findAll();
+        Long firstId = rosters.getFirst().getId();
+        log.info("First roster id is {}", firstId);
+
+        return firstId;
+    }
+
     @Test
     void getAllRostersShouldReturnCorrectNumberOfItems() {
 
@@ -58,24 +62,21 @@ public class DutyRosterHttpTests {
         int rosterCount = context.read("$.length()");
 
         assertThat(rosterCount).isEqualTo(4);
-
-        JSONArray rosterIds = context.read("$..id");
-        assertThat(rosterIds).containsExactlyInAnyOrder(1,2,3,4);
-
     }
 
     @Test
     void getRosterByIdShouldReturnRosterThatExists() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/rosters/1", String.class);
+
+        Long id = getIdOfFirstRoster();
+        String path = String.format("/rosters/%d", id);
+
+        ResponseEntity<DutyRoster> response = restTemplate.getForEntity(path, DutyRoster.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        DocumentContext context = JsonPath.parse(response.getBody());
-        Number id = context.read("$.id");
-        String type = context.read("$.detailType");
-
-        assertThat(id).isEqualTo(1);
-        assertThat(type).isEqualTo("CQ_NCO");
+        DutyRoster roster = response.getBody();
+        assertThat(roster).isNotNull();
+        assertThat(roster.getId()).isEqualTo(id);
     }
 
     @Test
@@ -86,11 +87,9 @@ public class DutyRosterHttpTests {
 
     @Test
     void shouldCreateNewRoster() {
-        DutyRoster newRoster = new DutyRoster(DetailType.ROAD_GUARD, "Road guard - report to SD " +
-                "desk at Building 67890");
+        DutyRoster newRoster = new DutyRoster(DetailType.ROAD_GUARD, "Road guard - report to SD " + "desk at Building 67890");
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/rosters", newRoster,
-                String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity("/rosters", newRoster, String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -104,17 +103,14 @@ public class DutyRosterHttpTests {
     void shouldUpdateExistingRoster() {
 
         // save an existing roster
-        DutyRoster savedRoster = dutyRosterRepository.save(new DutyRoster(DetailType.CQ_NCO, "old" +
-                " description"));
+        DutyRoster savedRoster = dutyRosterRepository.save(new DutyRoster(DetailType.CQ_NCO, "old" + " description"));
         Long id = savedRoster.getId();
 
         // create updated duty roster
-        DutyRoster updatedRoster = new DutyRoster(DetailType.ROAD_GUARD, "This is an updated " +
-                "description");
+        DutyRoster updatedRoster = new DutyRoster(DetailType.ROAD_GUARD, "This is an updated " + "description");
         // simulate put request
         HttpEntity<DutyRoster> entity = new HttpEntity<>(updatedRoster);
-        ResponseEntity<DutyRoster> updatedResponse = restTemplate
-                .exchange("/rosters/" + id, HttpMethod.PUT, entity, DutyRoster.class);
+        ResponseEntity<DutyRoster> updatedResponse = restTemplate.exchange("/rosters/" + id, HttpMethod.PUT, entity, DutyRoster.class);
 
         // validate updates
         assertThat(updatedResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -133,36 +129,33 @@ public class DutyRosterHttpTests {
 
         // simulate put request
         HttpEntity<DutyRoster> entity = new HttpEntity<>(newRoster);
-        ResponseEntity<DutyRoster> response = restTemplate
-                .exchange("/rosters/" + fakeId, HttpMethod.PUT, entity, DutyRoster.class);
+        ResponseEntity<DutyRoster> response = restTemplate.exchange("/rosters/" + fakeId, HttpMethod.PUT, entity, DutyRoster.class);
 
         // make sure 404 was returned
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
     }
 
-    //todo: tests for getting an assignment, getting all assignments, adding an assignment,
-    // removing an assignment, removing all assignments
 
     @Test
     void shouldCreateANewAssignment() {
 
         // get a saved roster
-        List<DutyRoster> rosters = dutyRosterRepository.findAll();
-        Long firstId = rosters.getFirst().getId();
+        Long firstId = getIdOfFirstRoster();
+        String assignmentPath = String.format("/rosters/%d/assignments", firstId);
 
         // create a new assignment
         DutyAssignment newAssignment = new DutyAssignment(LocalDate.of(2025, 7, 25), DetailType.CQ_NCO);
 
         // add assignment to existing roster
-        ResponseEntity<DutyRoster> response = restTemplate.postForEntity("/rosters/" + firstId + "/assignments",
-                newAssignment, DutyRoster.class);
+        ResponseEntity<DutyRoster> response = restTemplate.postForEntity(assignmentPath, newAssignment, DutyRoster.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
 
         // check if roster has the new assignment
-        DutyRoster updatedRoster =  restTemplate.getForObject("/rosters/1", DutyRoster.class);
+        String rosterPath = String.format("/rosters/%d", firstId);
+        DutyRoster updatedRoster = restTemplate.getForObject(rosterPath, DutyRoster.class);
 
         List<DutyAssignment> assignments = updatedRoster.getDutyAssignments();
         assertThat(assignments).isNotNull().hasSize(1);
@@ -171,25 +164,42 @@ public class DutyRosterHttpTests {
 
     @Test
     void shouldGetAllAssignments() {
-// get a saved roster
-        List<DutyRoster> rosters = dutyRosterRepository.findAll();
-        Long firstId = rosters.getFirst().getId();
+        // get a saved roster
+        Long firstId = getIdOfFirstRoster();
+        String assignmentPath = String.format("/rosters/%d/assignments", firstId);
+
         // add new assignment to saved roster
-        restTemplate.postForEntity("/rosters/1/assignments",
-                new DutyAssignment(LocalDate.of(2025,7,25), DetailType.ROAD_GUARD),
-                DutyAssignment.class);
+        restTemplate.postForEntity(assignmentPath, new DutyAssignment(LocalDate.of(2025, 7, 25), DetailType.ROAD_GUARD), DutyAssignment.class);
 
-        DutyRoster updatedRoster = restTemplate.getForObject("/rosters/1", DutyRoster.class);
-
-        log.info("listing roster.....");
-        updatedRoster
-                .getDutyAssignments().forEach(assignment -> {
-                    log.info(assignment.toString());
-                });
-
+        // validate roster has new assignment
+        String rosterPath = String.format("/rosters/%d", firstId);
+        DutyRoster updatedRoster = restTemplate.getForObject(rosterPath, DutyRoster.class);
 
         assertThat(updatedRoster).isNotNull();
-        assertThat(updatedRoster.getDutyAssignments()).isNotEmpty();
+        assertThat(updatedRoster.getDutyAssignments()).hasSize(1);
+
+    }
+
+    // todo: update assignment (with put), delete all for rosters, assignments
+
+    @Test
+    void shouldDeleteOneRoster() {
+        Long firstId = getIdOfFirstRoster();
+        String path = String.format("/rosters/%d", firstId);
+
+        // delete roster and verify 204 is returned
+        ResponseEntity<Void> response = restTemplate.exchange(path, HttpMethod.DELETE, null,
+                Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // verify roster does not exist and 404 is returned
+        ResponseEntity<DutyRoster> rosterResponse = restTemplate.getForEntity(path,
+                DutyRoster.class);
+        assertThat(rosterResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldDeleteAllRosters() {
 
     }
 
