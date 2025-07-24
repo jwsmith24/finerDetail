@@ -23,6 +23,7 @@ public class DutyAssignment {
 
     private LocalDate date;
 
+    // need because soldiers will have different duty types
     @Enumerated(EnumType.STRING)
     private DetailType detailType;
 

@@ -4,7 +4,6 @@ import dev.jake.finerdetail.entities.DutyRoster;
 import dev.jake.finerdetail.repos.DutyRosterRepository;
 import dev.jake.finerdetail.services.DutyRosterService;
 import dev.jake.finerdetail.util.constants.DetailType;
-import java.util.List;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
