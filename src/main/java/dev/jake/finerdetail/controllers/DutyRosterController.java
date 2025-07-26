@@ -82,6 +82,12 @@ public class DutyRosterController {
     }
 
     /**
+     * PUT /rosters/{rosterId}/assignments/{assignmentId}
+     */
+    @PutMapping
+
+
+    /**
      * DELETE /rosters/{id} Returns 204 on success, 404 if not found.
      */
     @DeleteMapping("/{id}")

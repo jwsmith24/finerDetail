@@ -1,5 +1,6 @@
 package dev.jake.finerdetail;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -8,9 +9,11 @@ import dev.jake.finerdetail.entities.DutyAssignment;
 import dev.jake.finerdetail.entities.DutyRoster;
 import dev.jake.finerdetail.repos.DutyRosterRepository;
 import dev.jake.finerdetail.util.constants.DetailType;
+import jakarta.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,6 +26,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DutyRosterHttpTests {
@@ -50,6 +54,22 @@ public class DutyRosterHttpTests {
         log.info("First roster id is {}", firstId);
 
         return firstId;
+    }
+
+
+    private Long getIdOfFirstAssignment(Long rosterId) {
+        String path = String.format("/rosters/%d/assignments", rosterId);
+        ResponseEntity<DutyRoster> response = restTemplate.getForEntity(path, DutyRoster.class);
+
+        DutyRoster roster = response.getBody();
+        assertThat(roster).isNotNull();
+
+        List<DutyAssignment> assignments = roster.getDutyAssignments();
+
+        DutyAssignment first = assignments.getFirst();
+
+
+        return first.getId();
     }
 
     @Test
@@ -183,6 +203,44 @@ public class DutyRosterHttpTests {
 
     // todo: update assignment (with put), delete one assignment, delete all assignments
 
+    @Transactional
+    @Test
+    void shouldUpdateOneAssignment() {
+        // get first roster
+        Long firstId = getIdOfFirstRoster();
+
+        DutyAssignment newAssignment = new DutyAssignment(LocalDate.of(2025
+                , 7, 26), DetailType.ROAD_GUARD);
+
+        // post new assignment
+        ResponseEntity<DutyAssignment> response =
+                restTemplate.postForEntity("/rosters/" + firstId + "/assignments",
+                        newAssignment, DutyAssignment.class);
+
+        log.info(response.toString());
+        Long newId = response.getBody().getId();
+        assertThat(newId).isNotNull();
+
+        //todo
+
+
+
+
+
+
+        // make sure assignment can be found via controller
+        String path = String.format("/rosters/%d/assignments/%d", firstId,
+                getIdOfFirstAssignment(firstId));
+
+       ResponseEntity<DutyAssignment> getResponse = restTemplate.getForEntity(path,
+               DutyAssignment.class);
+
+       assertThat(response.getBody()).isNotNull();
+
+
+    }
+
+
     @Test
     void shouldDeleteOneRoster() {
         Long firstId = getIdOfFirstRoster();
@@ -219,3 +277,4 @@ public class DutyRosterHttpTests {
     }
 
 }
+
