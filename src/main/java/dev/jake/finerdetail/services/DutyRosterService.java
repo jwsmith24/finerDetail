@@ -21,12 +21,12 @@ public class DutyRosterService {
     }
 
     @Transactional(readOnly = true)
-    public List<DutyRoster> getAll() {
+    public List<DutyRoster> getAllRosters() {
         return repo.findAll();
     }
 
     @Transactional(readOnly = true)
-    public DutyRoster getById(Long id) {
+    public DutyRoster getRosterById(Long id) {
         return repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Roster not found with ID: " + id));
     }
@@ -34,7 +34,7 @@ public class DutyRosterService {
 
     @Transactional(readOnly = true)
     public DutyAssignment getAssignmentById(Long rosterId, Long assignmentId) {
-        DutyRoster targetRoster = this.getById(rosterId);
+        DutyRoster targetRoster = this.getRosterById(rosterId);
 
         return targetRoster.getDutyAssignments().stream()
                 .filter(a -> a.getId().equals(assignmentId))
@@ -46,17 +46,17 @@ public class DutyRosterService {
     @Transactional(readOnly = true)
     public List<DutyAssignment> getAllAssignments(Long rosterId) {
 
-        DutyRoster targetRoster = this.getById(rosterId);
-        return Collections.unmodifiableList(targetRoster.getDutyAssignments());
+        DutyRoster targetRoster = this.getRosterById(rosterId);
+        return targetRoster.getDutyAssignments();
     }
 
     @Transactional
-    public DutyRoster create(DutyRoster roster) {
+    public DutyRoster createRoster(DutyRoster roster) {
         return repo.save(roster);
     }
 
     @Transactional
-    public void update(Long id, DutyRoster updated) {
+    public void updateRoster(Long id, DutyRoster updated) {
         repo.findById(id)
                 .map(existing -> {
                     existing.setDetailType(updated.getDetailType());
@@ -89,6 +89,31 @@ public class DutyRosterService {
         roster.getDutyAssignments().add(assignment);
         return assignment;
     }
+
+    @Transactional
+    public void updateAssignment(Long rosterId, DutyAssignment assignment) {
+        Long aId = assignment.getId();
+
+        if (aId == null) {
+            throw new IllegalArgumentException("Assignment ID cannot be null for an update");
+        }
+
+        // get target roster
+        DutyRoster roster = repo.findById(rosterId)
+                .orElseThrow( () -> new ResourceNotFoundException(
+                        String.format("Roster with ID " + "%d not found", rosterId)));
+
+
+        DutyAssignment targetAssignment = roster.getDutyAssignment(aId);
+
+        // update fields with latest info (date and description, detail type shouldn't change)
+        targetAssignment.setDate(assignment.getDate());
+        targetAssignment.setDescription(assignment.getDescription());
+
+
+    }
+
+
 
 
     @Transactional

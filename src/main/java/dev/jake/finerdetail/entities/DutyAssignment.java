@@ -33,8 +33,15 @@ public class DutyAssignment {
 
     public DutyAssignment(LocalDate date, DetailType detailType) {
         this.date = date;
+        this.description = "";
         this.detailType = detailType;
     }
+    public DutyAssignment(LocalDate date, String description, DetailType detailType) {
+        this.date = date;
+        this.description = "";
+        this.detailType = detailType;
+    }
+
 
     public Long getId() {
         return id;
@@ -62,6 +69,10 @@ public class DutyAssignment {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override

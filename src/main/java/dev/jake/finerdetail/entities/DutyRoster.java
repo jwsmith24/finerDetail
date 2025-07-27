@@ -1,6 +1,7 @@
 package dev.jake.finerdetail.entities;
 
 
+import dev.jake.finerdetail.controllers.util.ResourceNotFoundException;
 import dev.jake.finerdetail.util.constants.DetailType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A detail object represents a DA Form 6 for a specific duty with the exception that it is a
@@ -57,6 +59,18 @@ public class DutyRoster {
 
     public List<DutyAssignment> getDutyAssignments() {
         return dutyAssignments;
+    }
+
+    /**
+     * Filter list by assignment id and find the first entry that matches the target.
+     */
+    public DutyAssignment getDutyAssignment(Long assignmentId) {
+        return dutyAssignments.stream()
+                        .filter(a -> Objects.equals(a.getId(), assignmentId))
+                        .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(String
+                        .format("Assignment with ID %s not found on roster ID %s", assignmentId, this.id)));
+
     }
 
     public String getDescription() {

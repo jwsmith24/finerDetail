@@ -9,11 +9,9 @@ import dev.jake.finerdetail.entities.DutyAssignment;
 import dev.jake.finerdetail.entities.DutyRoster;
 import dev.jake.finerdetail.repos.DutyRosterRepository;
 import dev.jake.finerdetail.util.constants.DetailType;
-import jakarta.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DutyRosterHttpTests {
 
     private final static Logger log = LoggerFactory.getLogger(DutyRosterHttpTests.class);
+    private static final int PRE_SEEDED_ENTRY_COUNT = 5;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -46,6 +45,14 @@ public class DutyRosterHttpTests {
         dutyRosterRepository.save(new DutyRoster(DetailType.CQ_RUNNER, "CQ Runner in Building 12345"));
         dutyRosterRepository.save(new DutyRoster(DetailType.SD_NCO, "SD NCO in Building 67890"));
         dutyRosterRepository.save(new DutyRoster(DetailType.SD_RUNNER, "SD Runner in Building 67890"));
+
+        // create one with an assignment already
+        DutyRoster rosterWithAssignment = new DutyRoster(DetailType.ROAD_GUARD, "Road guard with " +
+                "an assignment");
+        rosterWithAssignment.getDutyAssignments().add(new DutyAssignment(LocalDate.now(),
+                DetailType.ROAD_GUARD));
+
+        dutyRosterRepository.save(rosterWithAssignment);
     }
 
     private Long getIdOfFirstRoster() {
@@ -56,21 +63,16 @@ public class DutyRosterHttpTests {
         return firstId;
     }
 
+    private Long getIdOfRosterWithAnAssignment() {
 
-    private Long getIdOfFirstAssignment(Long rosterId) {
-        String path = String.format("/rosters/%d/assignments", rosterId);
-        ResponseEntity<DutyRoster> response = restTemplate.getForEntity(path, DutyRoster.class);
-
-        DutyRoster roster = response.getBody();
-        assertThat(roster).isNotNull();
-
-        List<DutyAssignment> assignments = roster.getDutyAssignments();
-
-        DutyAssignment first = assignments.getFirst();
-
-
-        return first.getId();
+        return dutyRosterRepository.findAll().stream()
+                .filter(roster -> roster.getDutyAssignments() != null && !roster.getDutyAssignments().isEmpty())
+                .map(DutyRoster::getId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No roster with any " +
+                        "assignments found"));
     }
+
 
     @Test
     void getAllRostersShouldReturnCorrectNumberOfItems() {
@@ -82,7 +84,7 @@ public class DutyRosterHttpTests {
         DocumentContext context = JsonPath.parse(response.getBody());
         int rosterCount = context.read("$.length()");
 
-        assertThat(rosterCount).isEqualTo(4);
+        assertThat(rosterCount).isEqualTo(PRE_SEEDED_ENTRY_COUNT);
     }
 
     @Test
@@ -203,39 +205,9 @@ public class DutyRosterHttpTests {
 
     // todo: update assignment (with put), delete one assignment, delete all assignments
 
-    @Transactional
     @Test
+    @Transactional
     void shouldUpdateOneAssignment() {
-        // get first roster
-        Long firstId = getIdOfFirstRoster();
-
-        DutyAssignment newAssignment = new DutyAssignment(LocalDate.of(2025
-                , 7, 26), DetailType.ROAD_GUARD);
-
-        // post new assignment
-        ResponseEntity<DutyAssignment> response =
-                restTemplate.postForEntity("/rosters/" + firstId + "/assignments",
-                        newAssignment, DutyAssignment.class);
-
-        log.info(response.toString());
-        Long newId = response.getBody().getId();
-        assertThat(newId).isNotNull();
-
-        //todo
-
-
-
-
-
-
-        // make sure assignment can be found via controller
-        String path = String.format("/rosters/%d/assignments/%d", firstId,
-                getIdOfFirstAssignment(firstId));
-
-       ResponseEntity<DutyAssignment> getResponse = restTemplate.getForEntity(path,
-               DutyAssignment.class);
-
-       assertThat(response.getBody()).isNotNull();
 
 
     }

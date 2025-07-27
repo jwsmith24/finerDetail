@@ -31,12 +31,12 @@ public class DutyRosterController {
 
     @GetMapping
     public List<DutyRoster> getAllRosters() {
-        return service.getAll();
+        return service.getAllRosters();
     }
 
     @GetMapping("/{id}")
     public DutyRoster getRoster(@PathVariable Long id) {
-        return service.getById(id);
+        return service.getRosterById(id);
     }
 
     @GetMapping("/{rosterId}/assignments/{assignmentId}")
@@ -45,7 +45,7 @@ public class DutyRosterController {
         return service.getAssignmentById(rosterId, assignmentId);
     }
 
-    @GetMapping("{rosterId}/assignments")
+    @GetMapping("/{rosterId}/assignments")
     public List<DutyAssignment> getAllAssignments(@PathVariable Long rosterId) {
 
         return service.getAllAssignments(rosterId);
@@ -54,7 +54,7 @@ public class DutyRosterController {
     // add URI location to response header
     @PostMapping
     public ResponseEntity<DutyRoster> createRoster(@RequestBody DutyRoster roster) {
-        DutyRoster saved = service.create(roster);
+        DutyRoster saved = service.createRoster(roster);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.getId()).toUri();
 
         return ResponseEntity.created(location).body(saved);
@@ -78,13 +78,20 @@ public class DutyRosterController {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateRoster(@RequestBody DutyRoster roster, @PathVariable Long id) {
-        service.update(id, roster);
+        service.updateRoster(id, roster);
     }
 
     /**
      * PUT /rosters/{rosterId}/assignments/{assignmentId}
      */
-    @PutMapping
+    @PutMapping("/{rosterId}/assignments/{assignmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateAssignment(@RequestBody DutyAssignment assignment,
+                                 @PathVariable Long rosterId, @PathVariable Long assignmentId) {
+
+        service.updateAssignment(rosterId, assignment);
+
+    }
 
 
     /**
