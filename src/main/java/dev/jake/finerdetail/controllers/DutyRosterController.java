@@ -2,7 +2,11 @@ package dev.jake.finerdetail.controllers;
 
 import dev.jake.finerdetail.entities.DutyAssignment;
 import dev.jake.finerdetail.entities.DutyRoster;
+import dev.jake.finerdetail.entities.dtos.DutyAssignmentDTO;
+import dev.jake.finerdetail.entities.dtos.DutyRosterDTO;
 import dev.jake.finerdetail.services.DutyRosterService;
+import dev.jake.finerdetail.util.mappers.DutyAssignmentMapper;
+import dev.jake.finerdetail.util.mappers.DutyRosterMapper;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -30,50 +34,52 @@ public class DutyRosterController {
     }
 
     @GetMapping
-    public List<DutyRoster> getAllRosters() {
-        return service.getAllRosters();
+    public List<DutyRosterDTO> getAllRosters() {
+        return service.getAllRosters().stream().map(DutyRosterMapper::toDTO).toList();
     }
 
     @GetMapping("/{id}")
-    public DutyRoster getRoster(@PathVariable Long id) {
-        return service.getRosterById(id);
+    public DutyRosterDTO getRoster(@PathVariable Long id) {
+        return DutyRosterMapper.toDTO(service.getRosterById(id));
     }
 
     @GetMapping("/{rosterId}/assignments/{assignmentId}")
-    public DutyAssignment getAssignment(@PathVariable Long rosterId,
-                                        @PathVariable Long assignmentId) {
-        return service.getAssignmentById(rosterId, assignmentId);
+    public DutyAssignmentDTO getAssignment(@PathVariable Long rosterId,
+                                           @PathVariable Long assignmentId) {
+        return DutyAssignmentMapper.toDTO(service.getAssignmentById(rosterId, assignmentId));
     }
 
     @GetMapping("/{rosterId}/assignments")
-    public List<DutyAssignment> getAllAssignments(@PathVariable Long rosterId) {
+    public List<DutyAssignmentDTO> getAllAssignments(@PathVariable Long rosterId) {
 
-        return service.getAllAssignments(rosterId);
+        return service.getAllAssignments(rosterId).stream().map(DutyAssignmentMapper::toDTO).toList();
     }
 
     // add URI location to response header
     @PostMapping
-    public ResponseEntity<DutyRoster> createRoster(@RequestBody DutyRoster roster) {
-        DutyRoster saved = service.createRoster(roster);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.getId()).toUri();
+    public ResponseEntity<DutyRosterDTO> createRoster(@RequestBody DutyRoster roster) {
+        DutyRosterDTO saved = DutyRosterMapper.toDTO(service.createRoster(roster));
+        URI location =
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.id()).toUri();
 
         return ResponseEntity.created(location).body(saved);
     }
 
     @PostMapping("/{rosterId}/assignments")
-    public ResponseEntity<DutyAssignment> addAssignment(@PathVariable Long rosterId,
-                                                    @RequestBody DutyAssignment assignment) {
-        DutyAssignment created = service.addAssignment(rosterId, assignment);
+    public ResponseEntity<DutyAssignmentDTO> addAssignment(@PathVariable Long rosterId,
+                                                         @RequestBody DutyAssignment assignment) {
+        DutyAssignmentDTO created = DutyAssignmentMapper.toDTO(service.addAssignment(rosterId,
+                assignment));
         URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.getId()).toUri();
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.id()).toUri();
 
         return ResponseEntity.created(location).body(created);
 
     }
 
     /**
-     * PUT /rosters/{id} Updates existing roster with new information
-     * Returns 204 on success, 404 if not found.
+     * PUT /rosters/{id} Updates existing roster with new information Returns 204 on success, 404 if
+     * not found.
      */
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -82,12 +88,11 @@ public class DutyRosterController {
     }
 
     /**
-     * PUT /rosters/{rosterId}/assignments/{assignmentId}
+     * PUT /rosters/{rosterId}/assignments/update
      */
-    @PutMapping("/{rosterId}/assignments/{assignmentId}")
+    @PutMapping("/{rosterId}/assignments/update")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAssignment(@RequestBody DutyAssignment assignment,
-                                 @PathVariable Long rosterId, @PathVariable Long assignmentId) {
+    public void updateAssignment(@RequestBody DutyAssignment assignment, @PathVariable Long rosterId) {
 
         service.updateAssignment(rosterId, assignment);
 
@@ -110,8 +115,4 @@ public class DutyRosterController {
         service.removeAssignment(rosterId, assignmentId);
     }
 
-    @DeleteMapping
-    public void deleteAllRosters() {
-        service.deleteAllRosters();
-    }
 }

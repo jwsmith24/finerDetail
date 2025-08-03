@@ -229,24 +229,6 @@ public class DutyRosterHttpTests {
         assertThat(rosterResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    @Test
-    void shouldDeleteAllRosters() {
-        // delete all rosters and verify 204 is returned
-        ResponseEntity<Void> response = restTemplate.exchange("/rosters", HttpMethod.DELETE, null
-                , Void.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        ResponseEntity<List<DutyRoster>> rosterResponse = restTemplate.exchange("/rosters",
-                HttpMethod.GET, null, new ParameterizedTypeReference<>() {
-                }); // parameterized type reference -- Spring's type token implementation.
-        // Captures generic type (inferred based on target) to get around Java's type erasure
-
-        List<DutyRoster> rosters = rosterResponse.getBody();
-        assertThat(rosters).isNotNull().isEmpty();
-
-
-    }
 
 }
 
