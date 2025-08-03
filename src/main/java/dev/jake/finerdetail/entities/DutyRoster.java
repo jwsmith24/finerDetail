@@ -58,6 +58,13 @@ public class DutyRoster {
         this.dutyAssignments = new ArrayList<>();
     }
 
+    public DutyRoster(DetailType detailType, String description,
+                      List<DutyAssignment> dutyAssignments) {
+        this.detailType = detailType;
+        this.description = description;
+        this.dutyAssignments = dutyAssignments;
+    }
+
 
     public List<DutyAssignment> getDutyAssignments() {
         return dutyAssignments;

@@ -16,4 +16,13 @@ public class DutyRosterMapper {
                         .toList()
         );
     }
+
+    public static DutyRoster fromDTO (DutyRosterDTO rosterDTO) {
+        return new DutyRoster(
+                rosterDTO.detailType(),
+                rosterDTO.description(),
+                rosterDTO.dutyAssignments().stream().map(DutyAssignmentMapper::fromDTO).toList()
+        );
+
+    }
 }

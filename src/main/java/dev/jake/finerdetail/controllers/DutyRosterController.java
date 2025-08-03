@@ -57,8 +57,12 @@ public class DutyRosterController {
 
     // add URI location to response header
     @PostMapping
-    public ResponseEntity<DutyRosterDTO> createRoster(@RequestBody DutyRoster roster) {
-        DutyRosterDTO saved = DutyRosterMapper.toDTO(service.createRoster(roster));
+    public ResponseEntity<DutyRosterDTO> createRoster(@RequestBody DutyRosterDTO rosterDTO) {
+
+
+        DutyRosterDTO saved =
+                DutyRosterMapper.toDTO(service.createRoster(DutyRosterMapper.fromDTO(rosterDTO)));
+
         URI location =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.id()).toUri();
 
@@ -67,9 +71,9 @@ public class DutyRosterController {
 
     @PostMapping("/{rosterId}/assignments")
     public ResponseEntity<DutyAssignmentDTO> addAssignment(@PathVariable Long rosterId,
-                                                         @RequestBody DutyAssignment assignment) {
+                                                         @RequestBody DutyAssignmentDTO assignmentDTO) {
         DutyAssignmentDTO created = DutyAssignmentMapper.toDTO(service.addAssignment(rosterId,
-                assignment));
+                DutyAssignmentMapper.fromDTO(assignmentDTO)));
         URI location =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.id()).toUri();
 
@@ -83,8 +87,8 @@ public class DutyRosterController {
      */
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateRoster(@RequestBody DutyRoster roster, @PathVariable Long id) {
-        service.updateRoster(id, roster);
+    public void updateRoster(@RequestBody DutyRosterDTO rosterDTO, @PathVariable Long id) {
+        service.updateRoster(id, DutyRosterMapper.fromDTO(rosterDTO));
     }
 
     /**
@@ -92,9 +96,10 @@ public class DutyRosterController {
      */
     @PutMapping("/{rosterId}/assignments/update")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAssignment(@RequestBody DutyAssignment assignment, @PathVariable Long rosterId) {
+    public void updateAssignment(@RequestBody DutyAssignmentDTO assignmentDTO,
+                                 @PathVariable Long rosterId) {
 
-        service.updateAssignment(rosterId, assignment);
+        service.updateAssignment(rosterId, DutyAssignmentMapper.fromDTO(assignmentDTO));
 
     }
 
