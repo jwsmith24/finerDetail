@@ -1,12 +1,11 @@
 package dev.jake.finerdetail.controllers;
 
-import dev.jake.finerdetail.entities.DutyAssignment;
-import dev.jake.finerdetail.entities.DutyRoster;
 import dev.jake.finerdetail.entities.dtos.DutyAssignmentDTO;
 import dev.jake.finerdetail.entities.dtos.DutyRosterDTO;
 import dev.jake.finerdetail.services.DutyRosterService;
 import dev.jake.finerdetail.util.mappers.DutyAssignmentMapper;
 import dev.jake.finerdetail.util.mappers.DutyRosterMapper;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -44,8 +43,7 @@ public class DutyRosterController {
     }
 
     @GetMapping("/{rosterId}/assignments/{assignmentId}")
-    public DutyAssignmentDTO getAssignment(@PathVariable Long rosterId,
-                                           @PathVariable Long assignmentId) {
+    public DutyAssignmentDTO getAssignment(@PathVariable Long rosterId, @PathVariable Long assignmentId) {
         return DutyAssignmentMapper.toDTO(service.getAssignmentById(rosterId, assignmentId));
     }
 
@@ -57,25 +55,20 @@ public class DutyRosterController {
 
     // add URI location to response header
     @PostMapping
-    public ResponseEntity<DutyRosterDTO> createRoster(@RequestBody DutyRosterDTO rosterDTO) {
+    public ResponseEntity<DutyRosterDTO> createRoster(@Valid @RequestBody DutyRosterDTO rosterDTO) {
 
 
-        DutyRosterDTO saved =
-                DutyRosterMapper.toDTO(service.createRoster(DutyRosterMapper.fromDTO(rosterDTO)));
+        DutyRosterDTO saved = DutyRosterMapper.toDTO(service.createRoster(DutyRosterMapper.fromDTO(rosterDTO)));
 
-        URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.id()).toUri();
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(saved.id()).toUri();
 
         return ResponseEntity.created(location).body(saved);
     }
 
     @PostMapping("/{rosterId}/assignments")
-    public ResponseEntity<DutyAssignmentDTO> addAssignment(@PathVariable Long rosterId,
-                                                         @RequestBody DutyAssignmentDTO assignmentDTO) {
-        DutyAssignmentDTO created = DutyAssignmentMapper.toDTO(service.addAssignment(rosterId,
-                DutyAssignmentMapper.fromDTO(assignmentDTO)));
-        URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.id()).toUri();
+    public ResponseEntity<DutyAssignmentDTO> addAssignment(@PathVariable Long rosterId, @Valid @RequestBody DutyAssignmentDTO assignmentDTO) {
+        DutyAssignmentDTO created = DutyAssignmentMapper.toDTO(service.addAssignment(rosterId, DutyAssignmentMapper.fromDTO(assignmentDTO)));
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.id()).toUri();
 
         return ResponseEntity.created(location).body(created);
 
@@ -87,7 +80,7 @@ public class DutyRosterController {
      */
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateRoster(@RequestBody DutyRosterDTO rosterDTO, @PathVariable Long id) {
+    public void updateRoster(@Valid @RequestBody DutyRosterDTO rosterDTO, @PathVariable Long id) {
         service.updateRoster(id, DutyRosterMapper.fromDTO(rosterDTO));
     }
 
@@ -96,8 +89,7 @@ public class DutyRosterController {
      */
     @PutMapping("/{rosterId}/assignments/update")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAssignment(@RequestBody DutyAssignmentDTO assignmentDTO,
-                                 @PathVariable Long rosterId) {
+    public void updateAssignment(@Valid @RequestBody DutyAssignmentDTO assignmentDTO, @PathVariable Long rosterId) {
 
         service.updateAssignment(rosterId, DutyAssignmentMapper.fromDTO(assignmentDTO));
 
