@@ -17,6 +17,7 @@ import java.time.LocalDate;
 @Entity
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class DutyAssignment {
 
     @Id
@@ -44,6 +45,7 @@ public class DutyAssignment {
         this.date = date;
         this.description = description;
         this.detailType = detailType;
+
     }
 
 

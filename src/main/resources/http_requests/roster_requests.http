@@ -1,0 +1,32 @@
+
+GET http://localhost:8080/rosters
+
+
+###
+
+POST http://localhost:8080/rosters/2/assignments
+Content-Type: application/json
+
+{
+  "date": "2025-08-04",
+  "detailType": "ROAD_GUARD",
+  "description": "this was also added yay",
+  "rosterId": 2
+}
+
+###
+
+GET http://localhost:8080/rosters/2/assignments
+
+###
+
+PUT http://localhost:8080/rosters/2/assignments/update
+Content-Type: application/json
+
+{
+  "id": 1,
+  "date": "2025-08-08",
+  "description": "updated the date again",
+  "detailType": "ROAD_GUARD",
+  "rosterId": 2
+}

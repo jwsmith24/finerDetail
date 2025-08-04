@@ -3,31 +3,39 @@ package dev.jake.finerdetail.services;
 import dev.jake.finerdetail.controllers.util.ResourceNotFoundException;
 import dev.jake.finerdetail.entities.DutyAssignment;
 import dev.jake.finerdetail.entities.DutyRoster;
+import dev.jake.finerdetail.repos.DutyAssignmentRepository;
 import dev.jake.finerdetail.repos.DutyRosterRepository;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.Collections;
+
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DutyRosterService {
 
-    private final DutyRosterRepository repo;
+    private static final Logger log = LoggerFactory.getLogger(DutyRosterService.class);
+
+    private final DutyRosterRepository dutyRosterRepo;
+    private final DutyAssignmentRepository assignmentRepository;
 
 
-    public DutyRosterService(DutyRosterRepository repo) {
-        this.repo = repo;
+    public DutyRosterService(DutyRosterRepository dutyRosterRepo, DutyAssignmentRepository assignmentRepository) {
+        this.dutyRosterRepo = dutyRosterRepo;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @Transactional(readOnly = true)
     public List<DutyRoster> getAllRosters() {
-        return repo.findAll();
+        return dutyRosterRepo.findAll();
     }
 
     @Transactional(readOnly = true)
     public DutyRoster getRosterById(Long id) {
-        return repo.findById(id)
+        return dutyRosterRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Roster not found with ID: " + id));
     }
 
@@ -52,12 +60,12 @@ public class DutyRosterService {
 
     @Transactional
     public DutyRoster createRoster(DutyRoster roster) {
-        return repo.save(roster);
+        return dutyRosterRepo.save(roster);
     }
 
     @Transactional
     public void updateRoster(Long id, DutyRoster updated) {
-        repo.findById(id)
+        dutyRosterRepo.findById(id)
                 .map(existing -> {
                     existing.setDetailType(updated.getDetailType());
                     existing.setDescription(updated.getDescription());
@@ -68,13 +76,13 @@ public class DutyRosterService {
 
     @Transactional
     public void deleteRoster(Long id) {
-        if (!repo.existsById(id)) throw new ResourceNotFoundException("Roster not found with ID: " + id);
-        repo.deleteById(id);
+        if (!dutyRosterRepo.existsById(id)) throw new ResourceNotFoundException("Roster not found with ID: " + id);
+        dutyRosterRepo.deleteById(id);
     }
 
     @Transactional
     public void deleteAllRosters() {
-        repo.deleteAll();
+        dutyRosterRepo.deleteAll();
     }
 
     /**
@@ -82,33 +90,29 @@ public class DutyRosterService {
      */
     @Transactional
     public DutyAssignment addAssignment(Long rosterId, DutyAssignment assignment) {
-        DutyRoster roster = repo.findById(rosterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Roster with ID: " + rosterId +
-                        " not found"));
+        // create new assignment, link to roster
+        DutyRoster roster =
+                dutyRosterRepo.findById(rosterId).orElseThrow(() -> new ResourceNotFoundException("Target " +
+                        "roster does not exist"));
+        assignment.setRoster(roster);
+        roster.getDutyAssignments()
+                .add(assignment);
 
-        roster.getDutyAssignments().add(assignment);
-        return assignment;
+
+        return assignmentRepository.save(assignment);
     }
 
     @Transactional
-    public void updateAssignment(Long rosterId, DutyAssignment assignment) {
-        Long assignmentId = assignment.getId();
+    public void updateAssignment(DutyAssignment newAssignment) {
 
-        if (assignmentId == null) {
-            throw new IllegalArgumentException("Assignment ID cannot be null for an update");
-        }
+        log.info("Got roster to update with \n {}", newAssignment);
 
-        // get target roster
-        DutyRoster roster = repo.findById(rosterId)
-                .orElseThrow( () -> new ResourceNotFoundException(
-                        String.format("Roster with ID " + "%d not found", rosterId)));
+        DutyAssignment savedAssignment = assignmentRepository.findById(newAssignment.getId()).orElseThrow(
+                () -> new ResourceNotFoundException("Target assignment does not exist")
+        );
 
-        DutyAssignment targetAssignment = getAssignmentById(rosterId, assignmentId);
-
-        // update fields with latest info (date and description, detail type shouldn't change)
-        targetAssignment.setDate(assignment.getDate());
-        targetAssignment.setDescription(assignment.getDescription());
-
+        savedAssignment.setDescription(newAssignment.getDescription());
+        savedAssignment.setDate(newAssignment.getDate());
 
     }
 
@@ -117,7 +121,7 @@ public class DutyRosterService {
 
     @Transactional
     public void removeAssignment(Long rosterId, Long assignmentId) {
-        DutyRoster roster = repo.findById(rosterId)
+        DutyRoster roster = dutyRosterRepo.findById(rosterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Roster not found"));
 
         boolean removed = roster.getDutyAssignments()

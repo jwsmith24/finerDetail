@@ -89,9 +89,10 @@ public class DutyRosterController {
      */
     @PutMapping("/{rosterId}/assignments/update")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAssignment(@Valid @RequestBody DutyAssignmentDTO assignmentDTO, @PathVariable Long rosterId) {
+    public void updateAssignment(@Valid @RequestBody DutyAssignmentDTO assignmentDTO,
+                                 @PathVariable String rosterId) {
 
-        service.updateAssignment(rosterId, DutyAssignmentMapper.fromDTO(assignmentDTO));
+        service.updateAssignment(DutyAssignmentMapper.fromDTO(assignmentDTO));
 
     }
 
