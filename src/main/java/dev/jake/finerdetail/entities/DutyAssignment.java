@@ -7,6 +7,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 
 /**
@@ -15,6 +20,9 @@ import java.time.LocalDate;
  */
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DutyAssignment {
 
     @Id
@@ -29,8 +37,6 @@ public class DutyAssignment {
 
     private String description; // concise & specific information for the individual detail
 
-    protected DutyAssignment() {}
-
     public DutyAssignment(LocalDate date, DetailType detailType) {
         this.date = date;
         this.description = "";
@@ -38,42 +44,10 @@ public class DutyAssignment {
     }
     public DutyAssignment(LocalDate date, String description, DetailType detailType) {
         this.date = date;
-        this.description = "";
-        this.detailType = detailType;
-    }
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public DetailType getDetailType() {
-        return detailType;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public void setDetailType(DetailType detailType) {
-        this.detailType = detailType;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
+        this.detailType = detailType;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     @Override
     public String toString() {
