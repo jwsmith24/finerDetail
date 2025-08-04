@@ -92,9 +92,9 @@ public class DutyRosterService {
 
     @Transactional
     public void updateAssignment(Long rosterId, DutyAssignment assignment) {
-        Long aId = assignment.getId();
+        Long assignmentId = assignment.getId();
 
-        if (aId == null) {
+        if (assignmentId == null) {
             throw new IllegalArgumentException("Assignment ID cannot be null for an update");
         }
 
@@ -103,8 +103,7 @@ public class DutyRosterService {
                 .orElseThrow( () -> new ResourceNotFoundException(
                         String.format("Roster with ID " + "%d not found", rosterId)));
 
-
-        DutyAssignment targetAssignment = roster.getDutyAssignment(aId);
+        DutyAssignment targetAssignment = getAssignmentById(rosterId, assignmentId);
 
         // update fields with latest info (date and description, detail type shouldn't change)
         targetAssignment.setDate(assignment.getDate());

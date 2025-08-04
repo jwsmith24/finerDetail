@@ -13,6 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +34,8 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "duty_roster")
+@Data
+@NoArgsConstructor
 public class DutyRoster {
 
     @Id
@@ -44,12 +49,11 @@ public class DutyRoster {
 
     @OneToMany(
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            mappedBy = "roster"
     )
-    @JoinColumn(name = "roster_id")
     private List<DutyAssignment> dutyAssignments; // all duties available to be assigned
 
-    protected DutyRoster(){}
 
     // custom constructor for creating new duty rosters that will be persisted
     public DutyRoster(DetailType detailType, String description) {
@@ -66,41 +70,6 @@ public class DutyRoster {
     }
 
 
-    public List<DutyAssignment> getDutyAssignments() {
-        return dutyAssignments;
-    }
-
-    /**
-     * Filter list by assignment id and find the first entry that matches the target.
-     */
-    public DutyAssignment getDutyAssignment(Long assignmentId) {
-        return dutyAssignments.stream()
-                        .filter(a -> Objects.equals(a.getId(), assignmentId))
-                        .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException(String
-                        .format("Assignment with ID %s not found on roster ID %s", assignmentId, this.id)));
-
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public DetailType getDetailType() {
-        return this.detailType;
-    }
-
-    public void setDetailType(DetailType detailType) {
-        this.detailType = detailType;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     @Override
     public String toString() {

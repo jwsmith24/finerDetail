@@ -1,12 +1,7 @@
 package dev.jake.finerdetail.entities;
 
 import dev.jake.finerdetail.util.constants.DetailType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -22,7 +17,6 @@ import java.time.LocalDate;
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class DutyAssignment {
 
     @Id
@@ -36,6 +30,10 @@ public class DutyAssignment {
     private DetailType detailType;
 
     private String description; // concise & specific information for the individual detail
+
+    @ManyToOne
+    @JoinColumn(name = "roster_id")
+    private DutyRoster roster;
 
     public DutyAssignment(LocalDate date, DetailType detailType) {
         this.date = date;
