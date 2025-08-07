@@ -2,6 +2,7 @@ package dev.jake.finerdetail.controllers;
 
 import dev.jake.finerdetail.entities.dtos.DutyAssignmentDTO;
 import dev.jake.finerdetail.entities.dtos.DutyRosterDTO;
+import dev.jake.finerdetail.services.DutyAssignmentService;
 import dev.jake.finerdetail.services.DutyRosterService;
 import dev.jake.finerdetail.util.mappers.DutyAssignmentMapper;
 import dev.jake.finerdetail.util.mappers.DutyRosterMapper;
@@ -28,8 +29,9 @@ public class DutyRosterController {
 
     private final DutyRosterService service;
 
-    public DutyRosterController(DutyRosterService service) {
+    public DutyRosterController(DutyRosterService service ) {
         this.service = service;
+
     }
 
     @GetMapping
@@ -42,16 +44,7 @@ public class DutyRosterController {
         return DutyRosterMapper.toDTO(service.getRosterById(id));
     }
 
-    @GetMapping("/{rosterId}/assignments/{assignmentId}")
-    public DutyAssignmentDTO getAssignment(@PathVariable Long rosterId, @PathVariable Long assignmentId) {
-        return DutyAssignmentMapper.toDTO(service.getAssignmentById(rosterId, assignmentId));
-    }
 
-    @GetMapping("/{rosterId}/assignments")
-    public List<DutyAssignmentDTO> getAllAssignments(@PathVariable Long rosterId) {
-
-        return service.getAllAssignments(rosterId).stream().map(DutyAssignmentMapper::toDTO).toList();
-    }
 
     // add URI location to response header
     @PostMapping
@@ -65,14 +58,7 @@ public class DutyRosterController {
         return ResponseEntity.created(location).body(saved);
     }
 
-    @PostMapping("/{rosterId}/assignments")
-    public ResponseEntity<DutyAssignmentDTO> addAssignment(@PathVariable Long rosterId, @Valid @RequestBody DutyAssignmentDTO assignmentDTO) {
-        DutyAssignmentDTO created = DutyAssignmentMapper.toDTO(service.addAssignment(rosterId, DutyAssignmentMapper.fromDTO(assignmentDTO)));
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{assignmentId}").buildAndExpand(created.id()).toUri();
 
-        return ResponseEntity.created(location).body(created);
-
-    }
 
     /**
      * PUT /rosters/{id} Updates existing roster with new information Returns 204 on success, 404 if
@@ -84,17 +70,6 @@ public class DutyRosterController {
         service.updateRoster(id, DutyRosterMapper.fromDTO(rosterDTO));
     }
 
-    /**
-     * PUT /rosters/{rosterId}/assignments/update
-     */
-    @PutMapping("/{rosterId}/assignments/update")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAssignment(@Valid @RequestBody DutyAssignmentDTO assignmentDTO,
-                                 @PathVariable String rosterId) {
-
-        service.updateAssignment(DutyAssignmentMapper.fromDTO(assignmentDTO));
-
-    }
 
 
     /**
@@ -107,10 +82,6 @@ public class DutyRosterController {
     }
 
 
-    @DeleteMapping("/{rosterId}/assignments/{assignmentId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAssignment(@PathVariable Long rosterId, @PathVariable Long assignmentId) {
-        service.removeAssignment(rosterId, assignmentId);
-    }
+
 
 }

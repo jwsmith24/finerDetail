@@ -40,23 +40,9 @@ public class DutyRosterService {
     }
 
 
-    @Transactional(readOnly = true)
-    public DutyAssignment getAssignmentById(Long rosterId, Long assignmentId) {
-        DutyRoster targetRoster = this.getRosterById(rosterId);
 
-        return targetRoster.getDutyAssignments().stream()
-                .filter(a -> a.getId().equals(assignmentId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Assignment not " +
-                        "found with ID: %s in roster %s", assignmentId, rosterId)));
-    }
 
-    @Transactional(readOnly = true)
-    public List<DutyAssignment> getAllAssignments(Long rosterId) {
 
-        DutyRoster targetRoster = this.getRosterById(rosterId);
-        return targetRoster.getDutyAssignments();
-    }
 
     @Transactional
     public DutyRoster createRoster(DutyRoster roster) {
@@ -80,56 +66,5 @@ public class DutyRosterService {
         dutyRosterRepo.deleteById(id);
     }
 
-    @Transactional
-    public void deleteAllRosters() {
-        dutyRosterRepo.deleteAll();
-    }
 
-    /**
-     * Load an existing roster, add a duty assignment, and then let JPA handle the database magic.
-     */
-    @Transactional
-    public DutyAssignment addAssignment(Long rosterId, DutyAssignment assignment) {
-        // create new assignment, link to roster
-        DutyRoster roster =
-                dutyRosterRepo.findById(rosterId).orElseThrow(() -> new ResourceNotFoundException("Target " +
-                        "roster does not exist"));
-        assignment.setRoster(roster);
-        roster.getDutyAssignments()
-                .add(assignment);
-
-
-        return assignmentRepository.save(assignment);
-    }
-
-    @Transactional
-    public void updateAssignment(DutyAssignment newAssignment) {
-
-        log.info("Got roster to update with \n {}", newAssignment);
-
-        DutyAssignment savedAssignment = assignmentRepository.findById(newAssignment.getId()).orElseThrow(
-                () -> new ResourceNotFoundException("Target assignment does not exist")
-        );
-
-        savedAssignment.setDescription(newAssignment.getDescription());
-        savedAssignment.setDate(newAssignment.getDate());
-
-    }
-
-
-
-
-    @Transactional
-    public void removeAssignment(Long rosterId, Long assignmentId) {
-        DutyRoster roster = dutyRosterRepo.findById(rosterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Roster not found"));
-
-        boolean removed = roster.getDutyAssignments()
-                .removeIf(a -> a.getId().equals(assignmentId));
-
-        if (!removed) {
-            throw new EntityNotFoundException(String
-                    .format("Assignment %S not found on roster %s", assignmentId, rosterId));
-        }
-    }
 }

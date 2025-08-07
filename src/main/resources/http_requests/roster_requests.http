@@ -30,3 +30,7 @@ Content-Type: application/json
   "detailType": "ROAD_GUARD",
   "rosterId": 2
 }
+
+###
+
+DELETE http://localhost:8080/rosters/2/assignments/1
