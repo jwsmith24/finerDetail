@@ -20,12 +20,12 @@ public class DutyRosterService {
     private static final Logger log = LoggerFactory.getLogger(DutyRosterService.class);
 
     private final DutyRosterRepository dutyRosterRepo;
-    private final DutyAssignmentRepository assignmentRepository;
+
 
 
     public DutyRosterService(DutyRosterRepository dutyRosterRepo, DutyAssignmentRepository assignmentRepository) {
         this.dutyRosterRepo = dutyRosterRepo;
-        this.assignmentRepository = assignmentRepository;
+
     }
 
     @Transactional(readOnly = true)
